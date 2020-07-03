@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.webrtc.ecl.ntt.com/skyway-latest.js"></script>
+  <title>MYビデオ通話</title>
+</head>
+<body>
+  <video id="my-video" width="320px" autoplay playsinline></video><br>
+  <button type="button" onclick="showCam()">ビデオ</button>
+  <button type="button" onclick="showDisp()">画面共有（ＰＣのみ）</button><br>
+  <p id="my-id"></p>
+  <textarea id="their-id"></textarea>
+  <button type="button" onclick="makeCall()">会議参加</button><br>
+  <video id="their-video" width="320px" autoplay playsinline></video>
+
+  <script>
+  let localStream;
+  var peer;
+  var media;
+  var theirID="";
+
+  async function showCam() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
+      if (document.getElementById('their-id').value == "") {
+        document.getElementById('my-id').textContent = peer.id;
+      }
+      const videoElm = document.getElementById('my-video');
+      videoElm.srcObject = stream;
+      await videoElm.play();
+      localStream = stream;
+
+      if (media) {
+        if (theirID == "") {
+          media.replaceStream(stream);
+        } else { 
+          peer.call(theirID, localStream);
+        }
+      }
+
+    } catch( error ) {
+      document.getElementById('my-id').textContent="Play video error";
+      return;
+    };
+  }
+  
+  async function showDisp() {
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true
+      });
+      const videoElm = document.getElementById('my-video');
+      videoElm.srcObject = stream;
+      await videoElm.play();
+      localStream = stream;
+
+      if (media) {
+        if (theirID == "") {
+          media.replaceStream(stream);
+        } else { 
+          peer.call(theirID, localStream);
+        }
+      }
+
+    } catch( error ) {
+      document.getElementById('my-id').textContent="Share display error";
+      return;
+    };
+  }
+
+  async function makeCall() {
+    await showCam();
+    theirID = document.getElementById('their-id').value;
+    const mediaConnection = peer.call(theirID, localStream);
+    media = mediaConnection;
+    setEventListener(mediaConnection);
+  }
+  
+  peer = new Peer({
+    key: '939d1caa-a2f9-43ab-a709-4c53f9a695a2',
+    debug: 1
+  });
+
+  peer.on('open', () => {
+  });
+
+  peer.on('call', mediaConnection => {
+    media = mediaConnection;
+    mediaConnection.answer(localStream);
+    setEventListener(mediaConnection);
+  });
+
+  const setEventListener = mediaConnection => {
+    mediaConnection.on('stream', stream => {
+      const videoElm = document.getElementById('their-video')
+      videoElm.srcObject = stream;
+      videoElm.play();
+    });
+  };
+  
+</script>
+
+</body>
+</html>
