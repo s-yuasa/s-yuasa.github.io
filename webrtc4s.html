@@ -9,7 +9,8 @@
 <body>
   <video id="my-video" width="320px" autoplay playsinline></video><br>
   <button type="button" onclick="showCam()">ビデオ</button>
-  <button type="button" onclick="showDisp()">画面共有（ＰＣのみ）</button><br>
+  <button type="button" onclick="showDisp()">画面共有（ＰＣのみ）</button>
+  <button type="button" onclick="endVideo()">終了</button><br>
   <p id="my-id"></p>
   <textarea id="their-id"></textarea>
   <button type="button" onclick="makeCall()">会議参加</button><br>
@@ -79,6 +80,11 @@
     const mediaConnection = peer.call(theirID, localStream);
     media = mediaConnection;
     setEventListener(mediaConnection);
+  }
+  
+  function endVideo() {
+    peer.destroy();
+    document.location.reload();
   }
   
   peer = new Peer({
